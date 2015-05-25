@@ -1,0 +1,11 @@
+
+<h2> Update Task Cue </h2>
+
+<form action="{% url 'getData:write_mouse_task' box_nr %}" method="post">
+{% csrf_token %}
+    Task(s) to run in cage {{box_nr}}: <input type="text" name="task_name" "value=None" />
+<br>
+    Duration(s) to run task(s): <input type="text" name="duration" "value=0" />
+		    <input type="submit" value="submit" />
+</form>
+
