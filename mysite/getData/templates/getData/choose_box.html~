@@ -1,7 +1,7 @@
 
 <html>
 
-<h3> Access to Individual Data Files, sorted by Mouse </h3>
+<h2> Access to Individual Data Files, sorted by Mouse </h2>
 
 
 {% for mouse_dir in mouse_dirs %}

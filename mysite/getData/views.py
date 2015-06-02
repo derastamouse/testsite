@@ -123,9 +123,30 @@ def write_mouse_ID(request,box_nr):
 
 def set_mouse_task(request,box_nr):
 
-	context = {'box_nr': box_nr}
-	return render(request, 'getData/set_mouse_task.html',context)
+	if request.method == 'GET':
+		ssh_dest =   r'pi@192.168.' + str(100 + int(box_nr))
+		p = subprocess.Popen(["ssh", "%s" % ssh_dest, "ls /home/pi/behaviour_scripts"],
+				      shell=False, stdout=subprocess.PIPE, stderr = subprocess.PIPE)
+		tasks = p.stdout.readlines()
 
+		context = {'box_nr': box_nr,'taskList':tasks}
+		return render(request, 'getData/set_mouse_task.html',context)
+	
+
+	if request.method == 'POST':
+		ssh_dest =   r'pi@192.168.' + str(100 + int(box_nr))
+		p = subprocess.Popen(["ssh", "%s" % ssh_dest, "python /home/pi/behaviour_scripts/" + request.POST.get('task_name')],
+				      shell=False, stdout=subprocess.PIPE, stderr = subprocess.PIPE)
+		retrnTxt = p.stdout.readlines()
+		if (retrnTxt[0]=='hello world\n'):
+			openstr = '/home/rastamouse/Documents/Data/cage_tasks/' + 'box_' + str(box_nr)
+
+			f = open(openstr,'w+b')
+			task_schedule = str(request.POST['task_name'])
+			f.write(task_schedule)
+			f.close()
+			return HttpResponseRedirect(reverse('getData:box_info',args=(box_nr,)))
+	
 
 def write_mouse_task(request,box_nr):
 
@@ -180,13 +201,17 @@ def write_PiData(request,box_nr):
 	
 	path = base_path + mouse_ID + task_name
 
+	data =request.POST['piData'].split(',')
+
 	if os.path.isdir(path):
 		pass
 	else:
 		mkdir_p(path)
-	with open('path','a') as results:
+
+
+	with open( path+ r'/' 'test.csv','a') as results:
 		writer = csv.writer(results,dialect='excel')
-		writer.writerow(request.POST['data'])
+		writer.writerow(data)
 
 
 
@@ -228,6 +253,7 @@ def download_data(request):
 		path = base_filepath + request.POST.get('Mouse_ID')
 		zipPath = base_filepath + r'zipfiles/' + request.POST.get('Mouse_ID') + r'.zip'
 		zipf = zipfile.ZipFile(zipPath, 'w')
+
 
     		for root, dirs, files in os.walk(path):
        			 for file in files:
@@ -275,9 +301,12 @@ def upload_new_task(request,box_nr,isOnline):
 	if request.method == 'POST':
         
 		sentTask = request.FILES['sentFile']
-		with open('/home/rastamouse/test', 'wb+') as destination:
+		with open('/home/rastamouse/' + sentTask.name, 'wb+') as destination:
 			for chunk in sentTask.chunks():
             			destination.write(chunk)
+
+		scp_dest =   r'192.168.' + str(100 + int(box_nr))
+		os.system('scp ' + '/home/rastamouse/' + sentTask.name + ' pi@' + scp_dest + ':/home/pi/behaviour_scripts/' + sentTask.name)
 
             	# Redirect to the document list after POST
 		return HttpResponseRedirect(reverse('getData:boxes'))
@@ -401,7 +430,7 @@ def ping_boxes(numBoxes):
 def ping_box(box_nr):
 
 	base_addr = '192.168.0.' 
-	box_addr = base_addr + str(151 + int(box_nr))
+	box_addr = base_addr + str(100 + int(box_nr))
 
 	cmd = ['fping','-rn 1','-t 300',box_addr]
 
@@ -427,3 +456,10 @@ def mkdir_p(path):
         if exc.errno == errno.EEXIST and os.path.isdir(path):
             pass
         else: raise
+
+
+#
+
+def get_PiTasks(request,box_nr):
+	a = subprocess.Popen(['ssh','pi@192.168.0.' + 'box_nr', 'ls'],shell=False,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	available_tasks = a.stdout.readlines()

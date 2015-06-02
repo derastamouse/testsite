@@ -3,7 +3,7 @@
 
 <ul>
 
-<head>
+
 <style>
 table, th, td {
     border: 1px solid black;
@@ -14,10 +14,10 @@ th, td {
     text-align: center;
 }
 </style>
-</head>
+
 <body>
 
-
+<h2> Control Boxes and Update Info </h2>
 <table border="1" style="width:100%">
 
   <tr>
@@ -28,7 +28,7 @@ th, td {
 
 {% for box, mouseID,isOnline in boxs_and_IDs %}
 	<tr>
-		<td><a href="/getData/{{box}}/{"> Box Nr: {{box}} </a> </td>
+		<td><a href="/getData/{{box}}/"> Box Nr: {{box}} </a> </td>
 		<td> {{mouseID}}  </td>
 		{% if isOnline %}
 		<td>  <font color="green">online!</font>  </td>
@@ -43,4 +43,12 @@ th, td {
 
 </body>
 
+
 </ul>
+
+</table>
+
+<br>
+<br>
+<br>
+<a href="/getData/download_data/" > <h2> <font color="black" >Download Data Mouse_Wise </font> </h2>
